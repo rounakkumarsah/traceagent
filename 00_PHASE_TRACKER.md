@@ -15,3 +15,9 @@
 - [x] Implement transparent MCP stdio proxy (`traceagent wrap -- <cmd...>`) in `src/traceagent/ingest/mcp_tap.py` + wired into `cli.py` (`traceagent serve` bound to `127.0.0.1` by default and `traceagent wrap`).
 - [x] Implement 1-line LangGraph callback adapter in `src/traceagent/adapters/langgraph.py`.
 - [x] Add mandatory tests in `tests/test_otlp_ingest.py`, `tests/test_mcp_wrap.py`, and `tests/fixtures/mock_mcp_server.py`.
+
+## Phase 3 — Two-Mode Replay & Fork Engine, Offline Demo Fixture & CI Gate
+- [x] Implement offline 7-step demo fixture in `src/traceagent/demo/seed_demo.py` (`demo-langgraph-mcp-001`, crashing at Seq 6 due to malformed truncated JSON returned at Seq 5).
+- [x] Implement Two-Mode Replay & Fork Engine in `src/traceagent/replay/stub_replay.py` and `src/traceagent/replay/forker.py`, wired to `POST /api/traces/{trace_id}/fork` in `src/traceagent/server/app.py`.
+- [x] Implement CI Golden-Trace Regression Gate in `src/traceagent/replay/ci_gate.py` + `traceagent check` and `traceagent demo` in `src/traceagent/cli.py`.
+- [x] Add mandatory tests in `tests/test_replay_and_fork.py` and `tests/test_ci_gate.py`.

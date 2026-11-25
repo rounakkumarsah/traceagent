@@ -10,6 +10,13 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from traceagent.ingest.otlp_parser import parse_otlp_traces
+from traceagent.models import ForkRequest
+from traceagent.replay.forker import (
+    InvalidForkSeqError,
+    LiveRunnerNotConfiguredError,
+    TraceNotFoundError,
+    fork_trace,
+)
 from traceagent.storage.sqlite_ledger import SQLiteLedger
 
 MAX_OTLP_PAYLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
@@ -84,5 +91,15 @@ def create_app(db_path: str | Path = "traceagent.db") -> FastAPI:
             "trace": trace,
             "steps": [step.model_dump() for step in steps],
         }
+
+    @app.post("/api/traces/{trace_id}/fork", status_code=201)
+    async def fork_trace_endpoint(trace_id: str, request: ForkRequest) -> dict[str, Any]:
+        try:
+            result = await fork_trace(ledger, trace_id, request)
+        except TraceNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except (InvalidForkSeqError, LiveRunnerNotConfiguredError) as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return result.model_dump()
 
     return app

@@ -4,10 +4,11 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-TraceSource = Literal["otlp", "mcp_tap", "langgraph", "demo"]
+TraceSource = Literal["otlp", "mcp_tap", "langgraph", "demo", "stub_replay", "live_fork"]
 TraceStatus = Literal["running", "ok", "error"]
 StepOpType = Literal["invoke_agent", "chat", "execute_tool", "mcp_call"]
 StepStatus = Literal["ok", "error"]
+ReplayMode = Literal["stub_replay", "live_fork"]
 
 
 class TraceCreate(BaseModel):
@@ -62,3 +63,36 @@ class VerifyResult(BaseModel):
     checked_steps: int
     corrupted_seq: int | None = None
     reason: str | None = None
+
+
+class ForkRequest(BaseModel):
+    fork_at_seq: int = Field(ge=0)
+    override_payload: dict[str, Any]
+    mode: ReplayMode = "stub_replay"
+    live_runner_url: str | None = None
+    live_runner_model: str | None = None
+
+
+class TrajectoryDiff(BaseModel):
+    base_trace_id: str
+    fork_trace_id: str
+    base_status: StepStatus
+    fork_status: StepStatus
+    step_count_delta: int
+    error_count_delta: int
+    latency_delta_ms: float
+    token_delta: int
+    changed_seqs: list[int]
+
+
+class ForkResult(BaseModel):
+    fork_id: str
+    parent_trace_id: str
+    fork_trace_id: str
+    fork_at_seq: int
+    mode: ReplayMode
+    replay_mode_label: str
+    tokens_burned: int
+    prefix_tokens_saved: int
+    replay_duration_ms: float = 0.0
+    diff: TrajectoryDiff
