@@ -30,6 +30,7 @@ traceagent = "traceagent.cli:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/traceagent"]
+artifacts = ["src/traceagent/static/**"]
 
 [tool.ruff]
 line-length = 100

@@ -27,3 +27,10 @@
 - [x] Implement 3-panel dark DevTool workspace (`TraceExplorer`, `WaterfallFlamegraph` + SHA-256 Chain Status badge, `StepInspector` + live-validated JSON editor + 2-mode Fork selector + Base vs. Fork Diff summary).
 - [x] Build `frontend/out/`, copy to `src/traceagent/static/`, and mount in `src/traceagent/server/app.py` via `StaticFiles(html=True)` after all `/v1/*` and `/api/*` routes.
 - [x] Add `tests/test_static_ui.py` verifying `GET /` returns HTTP 200 HTML and `/api/health` is not shadowed.
+
+## Phase 5 — Final Production Hardening & Launch Readiness
+- [x] Create `scripts/benchmark_replay.py` measuring real local timings via `time.perf_counter()` on a clean temp SQLite WAL DB (1,000-step write, 1,000-step SHA-256 verify, 20-step Mode-1 stub replay + diff).
+- [x] Create `.github/workflows/ci.yml` matching `06_SECURITY_PACKAGING_CI.md` (100% deterministic offline CI: `ruff`, `mypy`, `bandit -r src -ll`, `pytest --cov=traceagent`, frontend `typecheck`/`lint`/`build`, wheel build + clean venv smoke test).
+- [x] Create MIT `LICENSE`, `docs/security/STRIDE.md`, and 3 ADRs under `docs/adr/` (`001-sqlite-wal-hash-chain.md`, `002-two-mode-replay-honesty.md`, `003-bundled-static-ui.md`).
+- [x] Verify `pyproject.toml` Hatchling wheel config includes `artifacts = ["src/traceagent/static/**"]`.
+- [x] Write `README.md` with above-the-fold hierarchy, `docs/demo.gif` placeholder, 1-command offline quickstart, Mode 1 vs Mode 2 explanation, real measured benchmark table, architecture diagram, CLI reference, and Enterprise Integration contact.
