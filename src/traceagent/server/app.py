@@ -80,6 +80,9 @@ def create_app(db_path: str | Path = "traceagent.db") -> FastAPI:
     @app.get("/api/traces")
     async def list_traces(limit: int = 100, offset: int = 0) -> dict[str, Any]:
         traces = await ledger.list_traces(limit=limit, offset=offset)
+        for t in traces:
+            if "step_count" not in t:
+                t["step_count"] = len(await ledger.get_steps(t["trace_id"]))
         return {"traces": traces}
 
     @app.get("/api/traces/{trace_id}")
@@ -89,10 +92,18 @@ def create_app(db_path: str | Path = "traceagent.db") -> FastAPI:
             raise HTTPException(status_code=404, detail=f"Trace not found: {trace_id}")
         steps = await ledger.get_steps(trace_id)
         chain_verification = await ledger.verify_trace(trace_id)
+        serialized_steps = []
+        for step in steps:
+            d = step.model_dump()
+            try:
+                d["payload"] = json.loads(step.payload_json)
+            except (json.JSONDecodeError, TypeError):
+                d["payload"] = {}
+            serialized_steps.append(d)
         return {
             "trace": trace,
             "chain_verification": chain_verification.model_dump(),
-            "steps": [step.model_dump() for step in steps],
+            "steps": serialized_steps,
         }
 
     @app.post("/api/traces/{trace_id}/fork", status_code=201)
