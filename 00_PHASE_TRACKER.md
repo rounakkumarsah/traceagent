@@ -9,3 +9,9 @@
 - [x] Implement tables: `traces`, `steps`, `forks`.
 - [x] Implement deterministic canonical JSON serialization (`sort_keys=True, separators=(",", ":")`) and SHA-256 hash chain.
 - [x] Implement `traceagent verify <trace_id>` (and `--all`) in `src/traceagent/cli.py` returning exit code `0` on valid chain and exit code `1` with exact tampered `seq` on modification.
+
+## Phase 2 — OTLP Receiver, MCP Stdio Tap & LangGraph Adapter
+- [x] Implement OTLP HTTP/JSON receiver (`POST /v1/traces`) + `GET /api/health`, `GET /api/traces`, `GET /api/traces/{trace_id}` in `src/traceagent/server/app.py` and `src/traceagent/ingest/otlp_parser.py` (with `10 MB` payload cap returning HTTP 413, `gen_ai.*` + `mcp.*` normalization, string-to-int coercion for OTLP `intValue`, and ingest secret redactor in `src/traceagent/ingest/redactor.py`).
+- [x] Implement transparent MCP stdio proxy (`traceagent wrap -- <cmd...>`) in `src/traceagent/ingest/mcp_tap.py` + wired into `cli.py` (`traceagent serve` bound to `127.0.0.1` by default and `traceagent wrap`).
+- [x] Implement 1-line LangGraph callback adapter in `src/traceagent/adapters/langgraph.py`.
+- [x] Add mandatory tests in `tests/test_otlp_ingest.py`, `tests/test_mcp_wrap.py`, and `tests/fixtures/mock_mcp_server.py`.

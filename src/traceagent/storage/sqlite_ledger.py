@@ -287,3 +287,109 @@ class SQLiteLedger:
             return [str(row["trace_id"]) for row in rows]
         finally:
             await conn.close()
+
+    async def ensure_trace(self, trace: TraceCreate) -> None:
+        """Insert a trace record if it does not already exist."""
+        async with self._write_lock:
+            conn = await self._connect()
+            try:
+                await conn.execute(
+                    """
+                    INSERT OR IGNORE INTO traces (
+                        trace_id, name, source, status, started_at_ns, ended_at_ns,
+                        total_in_tokens, total_out_tokens, parent_trace_id, forked_from_seq
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        trace.trace_id,
+                        trace.name,
+                        trace.source,
+                        trace.status,
+                        trace.started_at_ns,
+                        trace.ended_at_ns,
+                        trace.total_in_tokens,
+                        trace.total_out_tokens,
+                        trace.parent_trace_id,
+                        trace.forked_from_seq,
+                    ),
+                )
+                await conn.commit()
+            finally:
+                await conn.close()
+
+    async def list_traces(self, limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
+        """Return trace summaries ordered by most recent first."""
+        conn = await self._connect()
+        try:
+            cursor = await conn.execute(
+                """
+                SELECT trace_id, name, source, status, started_at_ns, ended_at_ns,
+                       total_in_tokens, total_out_tokens, parent_trace_id, forked_from_seq
+                FROM traces
+                ORDER BY started_at_ns DESC
+                LIMIT ? OFFSET ?
+                """,
+                (limit, offset),
+            )
+            rows = await cursor.fetchall()
+            return [dict(row) for row in rows]
+        finally:
+            await conn.close()
+
+    async def get_trace(self, trace_id: str) -> dict[str, Any] | None:
+        """Return a single trace summary or None if not found."""
+        conn = await self._connect()
+        try:
+            cursor = await conn.execute(
+                """
+                SELECT trace_id, name, source, status, started_at_ns, ended_at_ns,
+                       total_in_tokens, total_out_tokens, parent_trace_id, forked_from_seq
+                FROM traces
+                WHERE trace_id = ?
+                """,
+                (trace_id,),
+            )
+            row = await cursor.fetchone()
+            return dict(row) if row is not None else None
+        finally:
+            await conn.close()
+
+    async def get_steps(self, trace_id: str) -> list[StepRecord]:
+        """Return all steps for a trace ordered by seq."""
+        conn = await self._connect()
+        try:
+            cursor = await conn.execute(
+                """
+                SELECT id, trace_id, seq, span_id, parent_span_id, op_type, name, model,
+                       status, timestamp_ns, duration_ms, input_tokens, output_tokens,
+                       payload_json, prev_hash, step_hash
+                FROM steps
+                WHERE trace_id = ?
+                ORDER BY seq ASC
+                """,
+                (trace_id,),
+            )
+            rows = await cursor.fetchall()
+            return [
+                StepRecord(
+                    id=int(row["id"]),
+                    trace_id=str(row["trace_id"]),
+                    seq=int(row["seq"]),
+                    span_id=str(row["span_id"]),
+                    parent_span_id=row["parent_span_id"],
+                    op_type=row["op_type"],
+                    name=str(row["name"]),
+                    model=row["model"],
+                    status=row["status"],
+                    timestamp_ns=int(row["timestamp_ns"]),
+                    duration_ms=float(row["duration_ms"]),
+                    input_tokens=int(row["input_tokens"]),
+                    output_tokens=int(row["output_tokens"]),
+                    payload_json=str(row["payload_json"]),
+                    prev_hash=str(row["prev_hash"]),
+                    step_hash=str(row["step_hash"]),
+                )
+                for row in rows
+            ]
+        finally:
+            await conn.close()
