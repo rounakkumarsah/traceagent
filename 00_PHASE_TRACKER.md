@@ -21,3 +21,9 @@
 - [x] Implement Two-Mode Replay & Fork Engine in `src/traceagent/replay/stub_replay.py` and `src/traceagent/replay/forker.py`, wired to `POST /api/traces/{trace_id}/fork` in `src/traceagent/server/app.py`.
 - [x] Implement CI Golden-Trace Regression Gate in `src/traceagent/replay/ci_gate.py` + `traceagent check` and `traceagent demo` in `src/traceagent/cli.py`.
 - [x] Add mandatory tests in `tests/test_replay_and_fork.py` and `tests/test_ci_gate.py`.
+
+## Phase 4 — Bundled Next.js 15 Static Flamegraph & Fork UI
+- [x] Create Next.js 15 + React 19 + TypeScript + Tailwind CSS app under `frontend/` with `output: "export"`, `trailingSlash: true`, `images: { unoptimized: true }`, and `/?trace=<trace_id>` wrapped in `<Suspense>`.
+- [x] Implement 3-panel dark DevTool workspace (`TraceExplorer`, `WaterfallFlamegraph` + SHA-256 Chain Status badge, `StepInspector` + live-validated JSON editor + 2-mode Fork selector + Base vs. Fork Diff summary).
+- [x] Build `frontend/out/`, copy to `src/traceagent/static/`, and mount in `src/traceagent/server/app.py` via `StaticFiles(html=True)` after all `/v1/*` and `/api/*` routes.
+- [x] Add `tests/test_static_ui.py` verifying `GET /` returns HTTP 200 HTML and `/api/health` is not shadowed.

@@ -8,6 +8,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from traceagent.ingest.otlp_parser import parse_otlp_traces
 from traceagent.models import ForkRequest
@@ -87,8 +88,10 @@ def create_app(db_path: str | Path = "traceagent.db") -> FastAPI:
         if trace is None:
             raise HTTPException(status_code=404, detail=f"Trace not found: {trace_id}")
         steps = await ledger.get_steps(trace_id)
+        chain_verification = await ledger.verify_trace(trace_id)
         return {
             "trace": trace,
+            "chain_verification": chain_verification.model_dump(),
             "steps": [step.model_dump() for step in steps],
         }
 
@@ -101,5 +104,9 @@ def create_app(db_path: str | Path = "traceagent.db") -> FastAPI:
         except (InvalidForkSeqError, LiveRunnerNotConfiguredError) as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         return result.model_dump()
+
+    static_dir = Path(__file__).resolve().parent.parent / "static"
+    if static_dir.is_dir() and (static_dir / "index.html").is_file():
+        app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="static")
 
     return app
