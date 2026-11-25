@@ -155,7 +155,6 @@ traceagent check out/latest_run.jsonl \
 
 ## Architecture
 
-````markdown
 ```mermaid
 flowchart TD
     subgraph Sources [Agent and Tool Sources]
@@ -181,7 +180,6 @@ flowchart TD
     Ledger --> Gate
     Replay --> UI
     Ledger --> UI
-```
 
 ---
 
