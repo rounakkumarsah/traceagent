@@ -7,9 +7,6 @@
 [License: MIT](https://www.google.com/search?q=LICENSE)
 [](#architecture)
 
-&lt;!-- Replace with your 30-second recorded demo GIF once uploaded to https://www.google.com/search?q=docs/demo.gif --&gt;
-&lt;!--  --&gt;
-
 ---
 
 ## What Is TraceAgent? (Plain-English Explanation)
@@ -158,22 +155,23 @@ traceagent check out/latest_run.jsonl \
 
 ## Architecture
 
+````markdown
 ```mermaid
-graph TD
-    subgraph Sources["Agent & Tool Sources"]
-        LG["LangGraph Callback Adapter"]
-        OTel["OTel GenAI SDKs (POST /v1/traces)"]
-        MCP["MCP Servers (traceagent wrap -- cmd)"]
+flowchart TD
+    subgraph Sources [Agent and Tool Sources]
+        LG[LangGraph Callback Adapter]
+        OTel[OTel GenAI SDKs]
+        MCP[MCP Stdio Wrap Proxy]
     end
 
-    subgraph Core["TraceAgent Local Engine (FastAPI + Python 3.12)"]
-        Norm["OTLP & JSON-RPC Normalizer + Secret Redactor"]
-        Ledger[("SQLite WAL Ledger + SHA-256 Hash Chain")]
-        Replay["Two-Mode Replay & Fork Engine + TrajectoryDiff"]
-        Gate["CLI: verify / check CI Regression Gate"]
+    subgraph Core [TraceAgent Local Engine]
+        Norm[OTLP and JSON-RPC Normalizer + Secret Redactor]
+        Ledger[(SQLite WAL + SHA-256 Hash Chain)]
+        Replay[Two-Mode Replay and Fork Engine]
+        Gate[CLI Verify and CI Regression Gate]
     end
 
-    UI["Bundled Next.js 15 Static Flamegraph UI (Zero Node.js Required)"]
+    UI[Bundled Next.js 15 Static Flamegraph UI]
 
     LG --> Norm
     OTel --> Norm
