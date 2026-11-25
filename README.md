@@ -180,7 +180,7 @@ flowchart TD
     Ledger --> Gate
     Replay --> UI
     Ledger --> UI
-
+```
 ---
 
 ## Reproducible Local Benchmarks
